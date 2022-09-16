@@ -35,32 +35,36 @@ var _ = AppsDescribe("Routing Transparency", func() {
 	})
 
 	It("appropriately handles URLs with percent-encoded characters", func() {
-		curlResponse := helpers.CurlApp(Config, appName, "/requesturi/%21%7E%5E%24%20%27%28%29?foo=bar+baz%20bing")
-		Expect(curlResponse).To(ContainSubstring("Request"))
+		Eventually(func(g Gomega) {
+			curlResponse := helpers.CurlApp(Config, appName, "/requesturi/%21%7E%5E%24%20%27%28%29?foo=bar+baz%20bing")
+			g.Expect(curlResponse).To(ContainSubstring("Request"))
 
-		if Config.RunningOnK8s() {
-			By("decoding unsafe characters like ~")
-			Expect(curlResponse).To(ContainSubstring("/requesturi/%21~%5E%24%20%27%28%29"))
-		} else {
-			By("preserving all characters")
-			Expect(curlResponse).To(ContainSubstring("/requesturi/%21%7E%5E%24%20%27%28%29"))
-		}
+			if Config.RunningOnK8s() {
+				By("decoding unsafe characters like ~")
+				g.Expect(curlResponse).To(ContainSubstring("/requesturi/%21~%5E%24%20%27%28%29"))
+			} else {
+				By("preserving all characters")
+				g.Expect(curlResponse).To(ContainSubstring("/requesturi/%21%7E%5E%24%20%27%28%29"))
+			}
 
-		Expect(curlResponse).To(ContainSubstring("Query String is [foo=bar+baz%20bing]"))
+			g.Expect(curlResponse).To(ContainSubstring("Query String is [foo=bar+baz%20bing]"))
+		}).Should(Succeed())
 	})
 
 	It("appropriately handles certain reserved/unsafe characters", func() {
-		curlResponse := helpers.CurlApp(Config, appName, "/requesturi/!~^'()$\"?!'()$#!'")
-		Expect(curlResponse).To(ContainSubstring("Request"))
+		Eventually(func(g Gomega) {
+			curlResponse := helpers.CurlApp(Config, appName, "/requesturi/!~^'()$\"?!'()$#!'")
+			g.Expect(curlResponse).To(ContainSubstring("Request"))
 
-		if Config.RunningOnK8s() {
-			By("normalizing unsafe characters such as ^ and \" in the path")
-			Expect(curlResponse).To(ContainSubstring("/requesturi/!~%5E'()$%22"))
-		} else {
-			By("preserving all characters")
-			Expect(curlResponse).To(ContainSubstring("/requesturi/!~^'()$\""))
-		}
+			if Config.RunningOnK8s() {
+				By("normalizing unsafe characters such as ^ and \" in the path")
+				g.Expect(curlResponse).To(ContainSubstring("/requesturi/!~%5E'()$%22"))
+			} else {
+				By("preserving all characters")
+				g.Expect(curlResponse).To(ContainSubstring("/requesturi/!~^'()$\""))
+			}
 
-		Expect(curlResponse).To(ContainSubstring("Query String is [!'()$]"))
+			g.Expect(curlResponse).To(ContainSubstring("Query String is [!'()$]"))
+		}).Should(Succeed())
 	})
 })

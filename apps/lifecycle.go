@@ -3,6 +3,7 @@ package apps
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"regexp"
 	"strconv"
 	"strings"
@@ -109,7 +110,7 @@ var _ = AppsDescribe("Application Lifecycle", func() {
 
 		Describe("Context path", func() {
 			var app2 string
-			var appPath = "/imposter_dora"
+			appPath := "/imposter_dora"
 
 			BeforeEach(func() {
 				Expect(cf.Cf(app_helpers.CatnipWithArgs(
@@ -209,9 +210,18 @@ var _ = AppsDescribe("Application Lifecycle", func() {
 
 		Context("multiple instances", func() {
 			BeforeEach(func() {
+				ioutil.WriteFile("assets/catnip/bin/manifest.yml", []byte(fmt.Sprintf(`
+---
+applications:
+- name: %s
+  processes:
+  - type: web
+    command: ./catnip
+    instances: 2
+`, appName)), 0o644)
 				Expect(cf.Cf(app_helpers.CatnipWithArgs(
 					appName,
-					"-m", DEFAULT_MEMORY_LIMIT, "-i", "2")...).Wait(Config.CfPushTimeoutDuration())).To(Exit(0))
+					"-m", DEFAULT_MEMORY_LIMIT, "-f", "assets/catnip/bin/manifest.yml")...).Wait(Config.CfPushTimeoutDuration())).To(Exit(0))
 			})
 
 			It("is able to start all instances", func() {
@@ -226,7 +236,7 @@ var _ = AppsDescribe("Application Lifecycle", func() {
 
 			Context("is able to retrieve container metrics", func() {
 				// #0   running   2015-06-10 02:22:39 PM   0.0%   48.7M of 2G   14M of 1G
-				var metrics = regexp.MustCompile(`running.*(?:[\d\.]+)%\s+([\d\.]+)[KMG]? of (?:[\d\.]+)[KMG]?\s+([\d\.]+)[KMG]? of (?:[\d\.]+)[KMG]?`)
+				metrics := regexp.MustCompile(`running.*(?:[\d\.]+)%\s+([\d\.]+)[KMG]? of (?:[\d\.]+)[KMG]?\s+([\d\.]+)[KMG]? of (?:[\d\.]+)[KMG]?`)
 				memdisk := func() (float64, float64) {
 					app := cf.Cf("app", appName)
 					Expect(app.Wait()).To(Exit(0))
@@ -254,6 +264,7 @@ var _ = AppsDescribe("Application Lifecycle", func() {
 			})
 
 			It("is able to restart an instance", func() {
+				SkipItOnK8s("instance termination not supported")
 				idsBefore := app_helpers.ReportedIDs(2, appName)
 				Expect(len(idsBefore)).To(Equal(2))
 				Expect(cf.Cf("restart-app-instance", appName, "1").Wait(Config.CfPushTimeoutDuration())).To(Exit(0))
@@ -312,6 +323,7 @@ var _ = AppsDescribe("Application Lifecycle", func() {
 		})
 
 		It("generates an app usage 'started' event", func() {
+			SkipItOnK8s("events not supported")
 			Expect(cf.Cf(app_helpers.CatnipWithArgs(
 				appName,
 				"-m", DEFAULT_MEMORY_LIMIT)...).Wait(Config.CfPushTimeoutDuration())).To(Exit(0))
@@ -352,6 +364,7 @@ var _ = AppsDescribe("Application Lifecycle", func() {
 		})
 
 		It("generates an app usage 'stopped' event", func() {
+			SkipItOnK8s("events not supported")
 			Expect(cf.Cf("stop", appName).Wait()).To(Exit(0))
 
 			found, _ := lastAppUsageEvent(appName, "STOPPED")
@@ -362,10 +375,12 @@ var _ = AppsDescribe("Application Lifecycle", func() {
 			It("makes the app reachable again", func() {
 				Expect(cf.Cf("stop", appName).Wait()).To(Exit(0))
 
-				Eventually(func() bool {
-					found, _ := lastAppUsageEvent(appName, "STOPPED")
-					return found
-				}).Should(BeTrue())
+				if !Config.RunningOnK8s() {
+					Eventually(func() bool {
+						found, _ := lastAppUsageEvent(appName, "STOPPED")
+						return found
+					}).Should(BeTrue())
+				}
 
 				Expect(cf.Cf("start", appName).Wait()).To(Exit(0))
 
@@ -424,6 +439,7 @@ var _ = AppsDescribe("Application Lifecycle", func() {
 		})
 
 		It("makes the app unreachable", func() {
+			SkipItOnK8s("different routing behaviour")
 			Expect(cf.Cf("delete", appName, "-f", "-r").Wait()).To(Exit(0))
 
 			Eventually(func() string {
@@ -432,6 +448,7 @@ var _ = AppsDescribe("Application Lifecycle", func() {
 		})
 
 		It("generates an app usage 'stopped' event", func() {
+			SkipItOnK8s("events not supported")
 			Expect(cf.Cf("delete", appName, "-f", "-r").Wait()).To(Exit(0))
 
 			found, _ := lastAppUsageEvent(appName, "STOPPED")

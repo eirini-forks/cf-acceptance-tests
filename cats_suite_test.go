@@ -61,7 +61,7 @@ func TestCATS(t *testing.T) {
 		t.Fail()
 	}
 
-	var _ = SynchronizedBeforeSuite(func() []byte {
+	_ = SynchronizedBeforeSuite(func() []byte {
 		installedVersion, err := GetInstalledCliVersionString()
 
 		Expect(err).ToNot(HaveOccurred(), "Error trying to determine CF CLI version")
@@ -105,19 +105,21 @@ func TestCATS(t *testing.T) {
 		SetDefaultEventuallyTimeout(Config.DefaultTimeoutDuration())
 		SetDefaultEventuallyPollingInterval(1 * time.Second)
 
-		TestSetup = workflowhelpers.NewTestSuiteSetup(Config)
+		TestSetup = workflowhelpers.NewTestSuiteSetupWithoutQuota(Config)
 
-		workflowhelpers.AsUser(TestSetup.AdminUserContext(), Config.GetScaledTimeout(1*time.Minute), func() {
-			buildpacksSession := cf.Cf("buildpacks").Wait()
-			Expect(buildpacksSession).To(Exit(0))
-			buildpacks := string(buildpacksSession.Out.Contents())
+		if !Config.RunningOnK8s() {
+			workflowhelpers.AsUser(TestSetup.AdminUserContext(), Config.GetScaledTimeout(1*time.Minute), func() {
+				buildpacksSession := cf.Cf("buildpacks").Wait()
+				Expect(buildpacksSession).To(Exit(0))
+				buildpacks := string(buildpacksSession.Out.Contents())
 
-			Expect(buildpacks).To(ContainSubstring(Config.GetBinaryBuildpackName()), "Missing the binary buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
-			Expect(buildpacks).To(ContainSubstring(Config.GetGoBuildpackName()), "Missing the go buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
-			Expect(buildpacks).To(ContainSubstring(Config.GetJavaBuildpackName()), "Missing the java buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
-			Expect(buildpacks).To(ContainSubstring(Config.GetNodejsBuildpackName()), "Missing the NodeJS buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
-			Expect(buildpacks).To(ContainSubstring(Config.GetRubyBuildpackName()), "Missing the ruby buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
-		})
+				Expect(buildpacks).To(ContainSubstring(Config.GetBinaryBuildpackName()), "Missing the binary buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
+				Expect(buildpacks).To(ContainSubstring(Config.GetGoBuildpackName()), "Missing the go buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
+				Expect(buildpacks).To(ContainSubstring(Config.GetJavaBuildpackName()), "Missing the java buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
+				Expect(buildpacks).To(ContainSubstring(Config.GetNodejsBuildpackName()), "Missing the NodeJS buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
+				Expect(buildpacks).To(ContainSubstring(Config.GetRubyBuildpackName()), "Missing the ruby buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
+			})
+		}
 
 		TestSetup.Setup()
 	})

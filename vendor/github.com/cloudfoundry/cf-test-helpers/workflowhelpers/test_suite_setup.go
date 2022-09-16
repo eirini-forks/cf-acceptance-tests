@@ -57,6 +57,12 @@ func NewTestSuiteSetup(config testSuiteConfig) *ReproducibleTestSuiteSetup {
 	return NewTestContextSuiteSetup(config, testSpace, config.GetUseExistingUser())
 }
 
+func NewTestSuiteSetupWithoutQuota(config testSuiteConfig) *ReproducibleTestSuiteSetup {
+	testSpace := internal.NewRegularTestSpaceWithoutQuota(config)
+
+	return NewTestContextSuiteSetup(config, testSpace, config.GetUseExistingUser())
+}
+
 func NewSmokeTestSuiteSetup(config testSuiteConfig) *ReproducibleTestSuiteSetup {
 	testSpace := internal.NewRegularTestSpace(config, "10G")
 

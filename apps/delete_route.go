@@ -44,6 +44,8 @@ var _ = AppsDescribe("Delete Route", func() {
 
 	Describe("Removing the route", func() {
 		It("Should be  able to remove and delete the route", func() {
+			SkipItOnK8s("different routing behaviour")
+
 			secondHost := random_name.CATSRandomName("ROUTE")
 
 			By("adding a route")

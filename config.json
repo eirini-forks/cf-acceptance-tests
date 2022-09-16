@@ -1,0 +1,31 @@
+{
+    "api": "localhost",
+    "admin_user": "cf-admin",
+    "admin_password": "---",
+    "apps_domain": "vcap.me",
+    "skip_ssl_validation": true,
+
+    "include_apps": false,
+    "include_tasks": false,
+    "include_v3": true,
+    "include_detect": false,
+
+    "include_backend_compatibility": false,
+    "include_deployments": false,
+    "include_docker": false,
+    "include_internet_dependent": false,
+    "include_private_docker_registry": false,
+    "include_route_services": false,
+    "include_routing": false,
+    "include_service_discovery": false,
+    "include_service_instance_sharing": false,
+    "include_services": false,
+    "include_ssh": false,
+
+    "use_existing_user": true,
+    "existing_user": "cf-admin",
+    "existing_user_password": "---",
+    "keep_user_at_suite_end": true,
+
+    "infrastructure": "kubernetes"
+}

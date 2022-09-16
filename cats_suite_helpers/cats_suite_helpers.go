@@ -39,6 +39,12 @@ func SkipOnK8s(reason string) {
 	})
 }
 
+func SkipItOnK8s(reason string) {
+	if Config.RunningOnK8s() {
+		Skip(fmt.Sprintf(skip_messages.SkipK8sMessage, reason))
+	}
+}
+
 func AppSyslogTcpDescribe(description string, callback func()) bool {
 	return Describe("[app_syslog_tcp]", func() {
 		BeforeEach(func() {

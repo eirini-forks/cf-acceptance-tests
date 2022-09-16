@@ -55,6 +55,7 @@ var _ = AppsDescribe("Crashing", func() {
 		})
 
 		It("shows crash events", func() {
+			SkipItOnK8s("events not supported")
 			helpers.CurlApp(Config, appName, "/sigterm/KILL")
 			Eventually(func() string {
 				return string(cf.Cf("events", appName).Wait().Out.Contents())

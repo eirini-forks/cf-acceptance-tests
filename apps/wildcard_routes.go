@@ -15,6 +15,8 @@ import (
 )
 
 var _ = AppsDescribe("Wildcard Routes", func() {
+	SkipOnK8s("domain creation not supported")
+
 	var appNameCatnip string
 	var appNameSimple string
 	var domainName string

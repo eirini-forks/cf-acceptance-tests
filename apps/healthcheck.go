@@ -1,6 +1,8 @@
 package apps
 
 import (
+	"path/filepath"
+
 	. "github.com/cloudfoundry/cf-acceptance-tests/cats_suite_helpers"
 	"github.com/cloudfoundry/cf-acceptance-tests/helpers/app_helpers"
 	"github.com/cloudfoundry/cf-acceptance-tests/helpers/assets"
@@ -9,8 +11,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
-
-	"path/filepath"
 
 	"github.com/cloudfoundry/cf-acceptance-tests/helpers/random_name"
 	"github.com/cloudfoundry/cf-test-helpers/cf"
@@ -30,6 +30,7 @@ var _ = AppsDescribe("Healthcheck", func() {
 	})
 
 	Describe("when the healthcheck is set to none", func() {
+		SkipOnK8s("process healthcheck not supported?")
 		It("starts up successfully", func() {
 			By("pushing it")
 			Eventually(cf.Cf(

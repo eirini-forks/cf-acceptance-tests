@@ -65,6 +65,21 @@ func NewRegularTestSpace(cfg spaceConfig, quotaLimit string) *TestSpace {
 	)
 }
 
+func NewRegularTestSpaceWithoutQuota(cfg spaceConfig) *TestSpace {
+	organizationName, _ := organizationName(cfg)
+	spaceName := spaceName(cfg)
+	return NewBaseTestSpace(
+		spaceName,
+		organizationName,
+		"",
+		"",
+		cfg.GetUseExistingOrganization(),
+		cfg.GetUseExistingSpace(),
+		cfg.GetScaledTimeout(1*time.Minute),
+		commandstarter.NewCommandStarter(),
+	)
+}
+
 func NewBaseTestSpace(spaceName, organizationName, quotaDefinitionName, quotaDefinitionTotalMemoryLimit string, isExistingOrganization bool, isExistingSpace bool, timeout time.Duration, cmdStarter internal.Starter) *TestSpace {
 	testSpace := &TestSpace{
 		QuotaDefinitionName:                  quotaDefinitionName,
@@ -99,14 +114,18 @@ func (ts *TestSpace) Create() {
 	}
 
 	if !ts.isExistingOrganization {
-		createQuota := internal.Cf(ts.CommandStarter, args...)
-		EventuallyWithOffset(1, createQuota, ts.Timeout).Should(Exit(0), "Failed to create quota")
+		if ts.QuotaDefinitionName != "" {
+			createQuota := internal.Cf(ts.CommandStarter, args...)
+			EventuallyWithOffset(1, createQuota, ts.Timeout).Should(Exit(0), "Failed to create quota")
+		}
 
 		createOrg := internal.Cf(ts.CommandStarter, "create-org", ts.organizationName)
 		EventuallyWithOffset(1, createOrg, ts.Timeout).Should(Exit(0), "Failed to create org")
 
-		setQuota := internal.Cf(ts.CommandStarter, "set-quota", ts.organizationName, ts.QuotaDefinitionName)
-		EventuallyWithOffset(1, setQuota, ts.Timeout).Should(Exit(0), "Failed to set org quota")
+		if ts.QuotaDefinitionName != "" {
+			setQuota := internal.Cf(ts.CommandStarter, "set-quota", ts.organizationName, ts.QuotaDefinitionName)
+			EventuallyWithOffset(1, setQuota, ts.Timeout).Should(Exit(0), "Failed to set org quota")
+		}
 	}
 
 	if !ts.isExistingSpace {
@@ -125,8 +144,10 @@ func (ts *TestSpace) Destroy() {
 		deleteOrg := internal.Cf(ts.CommandStarter, "delete-org", "-f", ts.organizationName)
 		EventuallyWithOffset(1, deleteOrg, ts.Timeout).Should(Exit(0), "Failed to delete org")
 
-		deleteQuota := internal.Cf(ts.CommandStarter, "delete-quota", "-f", ts.QuotaDefinitionName)
-		EventuallyWithOffset(1, deleteQuota, ts.Timeout).Should(Exit(0), "Failed to delete quota")
+		if ts.QuotaDefinitionName != "" {
+			deleteQuota := internal.Cf(ts.CommandStarter, "delete-quota", "-f", ts.QuotaDefinitionName)
+			EventuallyWithOffset(1, deleteQuota, ts.Timeout).Should(Exit(0), "Failed to delete quota")
+		}
 	}
 }
 

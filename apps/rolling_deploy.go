@@ -15,9 +15,7 @@ import (
 )
 
 var _ = AppsDescribe("Rolling deploys", func() {
-	var (
-		appName string
-	)
+	var appName string
 
 	BeforeEach(func() {
 		appName = random_name.CATSRandomName("APP")
@@ -38,6 +36,7 @@ var _ = AppsDescribe("Rolling deploys", func() {
 	})
 
 	It("deploys the app with zero downtime", func() {
+		SkipItOnK8s("deployments not supported")
 		By("checking the app remains available")
 		doneChannel := make(chan bool, 1)
 		ticker := time.NewTicker(1 * time.Second)

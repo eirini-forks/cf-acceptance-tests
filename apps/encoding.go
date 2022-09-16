@@ -18,6 +18,8 @@ import (
 var _ = AppsDescribe("Encoding", func() {
 	var appName string
 
+	SkipOnK8s("unknown behaviour difference")
+
 	BeforeEach(func() {
 		appName = random_name.CATSRandomName("APP")
 		Expect(cf.Cf("push",

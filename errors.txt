@@ -1,0 +1,28 @@
+[FAIL] [apps] Routing Transparency [It] appropriately handles URLs with percent-encoded characters
+[FAIL] [apps] An application printing a bunch of output [It] doesn't die when printing 32MB
+[FAIL] [apps] Encoding [It] Does not corrupt UTF-8 characters in filenames
+> ???
+
+[FAIL] [apps] Wildcard Routes [BeforeEach] Adding a wildcard route to a domain completes successfully
+> shared domain creation not supported
+
+[FAIL] [apps] Environment Variables Groups Running environment variable groups [It] Applies correct environment variables while running apps
+> env var groups not supported
+
+[FAIL] [apps] Application Lifecycle pushing multiple instances [It] is able to start all instances
+[FAIL] [apps] Application Lifecycle pushing multiple instances [It] is able to restart an instance
+> cf push -i not supported, instance termination not supported
+
+[FAIL] [apps] Rolling deploys [It] deploys the app with zero downtime
+> deployments not supported
+
+[FAIL] [apps] Delete Route Removing the route [It] Should be  able to remove and delete the route
+[FAIL] [apps] Application Lifecycle deleting [It] makes the app unreachable
+> SSL error instead of 404
+
+[FAIL] [apps] Crashing the app crashes [It] shows crash events
+[FAIL] [apps] Application Lifecycle stopping and then starting [It] makes the app reachable again
+[FAIL] [apps] Application Lifecycle pushing [It] generates an app usage 'started' event
+[FAIL] [apps] Application Lifecycle stopping [It] generates an app usage 'stopped' event
+[FAIL] [apps] Application Lifecycle deleting [It] generates an app usage 'stopped' event
+> events not supported

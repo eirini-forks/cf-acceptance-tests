@@ -31,7 +31,9 @@ var _ = AppsDescribe("Environment Variables Groups", func() {
 		Vars map[string]string `json:"var"`
 	}
 
-	var createBuildpack = func(envVarName string) string {
+	SkipOnK8s("Environment variable groups not supported")
+
+	createBuildpack := func(envVarName string) string {
 		tmpPath, err := ioutil.TempDir("", "env-group-staging")
 		Expect(err).ToNot(HaveOccurred())
 
@@ -63,14 +65,14 @@ exit 1
 		return buildpackArchivePath
 	}
 
-	var fetchEnvironmentVariables = func(groupType string) map[string]string {
+	fetchEnvironmentVariables := func(groupType string) map[string]string {
 		var session *Session
 		workflowhelpers.AsUser(TestSetup.AdminUserContext(), Config.DefaultTimeoutDuration(), func() {
 			session = cf.Cf("curl", fmt.Sprintf("/v3/environment_variable_groups/%s", groupType)).Wait()
 			Expect(session).To(Exit(0))
 		})
 
-		var envVarGroupResponse = EnvVarResponse{}
+		envVarGroupResponse := EnvVarResponse{}
 		err := json.Unmarshal(session.Out.Contents(), &envVarGroupResponse)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -80,13 +82,13 @@ exit 1
 		return envVarGroupResponse.Vars
 	}
 
-	var marshalUpdatedEnv = func(envMap map[string]string) []byte {
+	marshalUpdatedEnv := func(envMap map[string]string) []byte {
 		jsonObj, err := json.Marshal(envMap)
 		Expect(err).NotTo(HaveOccurred())
 		return jsonObj
 	}
 
-	var extendEnv = func(groupType, envVarName, envVarValue string) {
+	extendEnv := func(groupType, envVarName, envVarValue string) {
 		envMap := fetchEnvironmentVariables(groupType)
 		envMap[envVarName] = envVarValue
 		jsonObj := marshalUpdatedEnv(envMap)
@@ -95,7 +97,7 @@ exit 1
 		Expect(cf.Cf(command, string(jsonObj)).Wait()).To(Exit(0))
 	}
 
-	var revertExtendedEnv = func(groupType, envVarName string) {
+	revertExtendedEnv := func(groupType, envVarName string) {
 		envMap := fetchEnvironmentVariables(groupType)
 		jsonObj := marshalUpdatedEnv(envMap)
 
@@ -107,8 +109,6 @@ exit 1
 		var appName string
 		var buildpackName string
 		var envVarName string
-
-		SkipOnK8s("Custom buildpacks not yet supported")
 
 		BeforeEach(func() {
 			appName = random_name.CATSRandomName("APP")

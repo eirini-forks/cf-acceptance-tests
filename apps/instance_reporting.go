@@ -40,13 +40,7 @@ var _ = AppsDescribe("Getting instance information", func() {
 
 		It("fails with insufficient resources", func() {
 			scale := cf.Cf("scale", appName, "-m", workflowhelpers.RUNAWAY_QUOTA_MEM_LIMIT, "-f")
-			scaleMatch := "insufficient"
-
-			if Config.RunningOnK8s() {
-				scaleMatch = "Insufficient"
-			}
-
-			Eventually(scale).Should(Or(Say(scaleMatch), Say("down")))
+			Eventually(scale).Should(Or(Say("insufficient"), Say("down")))
 			scale.Kill()
 
 			app := cf.Cf("app", appName)
